@@ -36,7 +36,7 @@ char *ignore_space(char *str)
 void ctrl_c(int n)
 {
 	(void)n;
-	write(STDOUT_FILENO, "\n:) ", 4);
+	write(STDOUT_FILENO, "\n(-__-) ", 8);
 }
 
 /**

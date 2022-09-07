@@ -30,7 +30,7 @@ int _execve(char **s, list_t *env, int num)
 	{
 		tmp_store = s[0];
 		t = 1;
-	}	
+	}
 	/* else flesh out full path */
 	else
 		tmp_store = _which(s[0], env);
