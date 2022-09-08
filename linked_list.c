@@ -1,128 +1,159 @@
 #include "shell.h"
 
 /**
- * print_list - _print linked list
- * @h: linked list
- * Return: size of linked list
+ * add_node - adds a node to the start of the list
+ * @head: address of pointer to head node
+ * @str: str field of node
+ * @num: node index used by history
+ *
+ * Return: size of list
  */
-size_t print_list(list_t *h)
+list_t *add_node(list_t **head, const char *str, int num)
 {
-	list_t *c_list = h;
-	int count = 0;
-	int c = 0;
+	list_t *new_head;
 
-	if (h == NULL)
-		return (0);
-	while (c_list != NULL)
+	if (!head)
+		return (NULL);
+	new_head = malloc(sizeof(list_t));
+	if (!new_head)
+		return (NULL);
+	_memset((void *)new_head, 0, sizeof(list_t));
+	new_head->num = num;
+	if (str)
 	{
-		if (c_list->var == NULL)
+		new_head->str = _strdup(str);
+		if (!new_head->str)
 		{
-			write(STDOUT_FILENO, "(nil)", 5);
-			write(STDOUT_FILENO, "\n", 1);
+			free(new_head);
+			return (NULL);
 		}
-		else
-		{
-			c = 0;
-			while ((c_list->var)[c] != '\0')
-				c++;
-			write(STDOUT_FILENO, c_list->var, c);
-			write(STDOUT_FILENO, "\n", 1);
-		}
-		c_list = c_list->next;
-		count++;
 	}
-	return (count);
+	new_head->next = *head;
+	*head = new_head;
+	return (new_head);
 }
 
 /**
- * add_end_node - add node to end of linked list
- * @head: pointer to head of linked list
- * @str: data to new node
- * Return: pointer to new linked list
+ * add_node_end - adds a node to the end of the list
+ * @head: address of pointer to head node
+ * @str: str field of node
+ * @num: node index used by history
+ *
+ * Return: size of list
  */
-list_t *add_end_node(list_t **head, char *str)
+list_t *add_node_end(list_t **head, const char *str, int num)
 {
-	list_t *new;
-	list_t *holder;
+	list_t *new_node, *node;
 
-	if (head == NULL || str == NULL)
-		return (NULL); /* check if address of head is null */
-	new = malloc(sizeof(list_t));
-	if (new == NULL)
+	if (!head)
 		return (NULL);
 
-	new->var = _strdup(str);
-	new->next = NULL;
-
-	holder = *head;
-	if (holder != NULL)
+	node = *head;
+	new_node = malloc(sizeof(list_t));
+	if (!new_node)
+		return (NULL);
+	_memset((void *)new_node, 0, sizeof(list_t));
+	new_node->num = num;
+	if (str)
 	{
-		while (holder->next != NULL)
+		new_node->str = _strdup(str);
+		if (!new_node->str)
 		{
-			holder = holder->next;
+			free(new_node);
+			return (NULL);
 		}
-		holder->next = new;
+	}
+	if (node)
+	{
+		while (node->next)
+			node = node->next;
+		node->next = new_node;
 	}
 	else
-	{
-		*head = new;
-	}
-	return (*head);
+		*head = new_node;
+	return (new_node);
 }
 
 /**
- * delete_nodeint_at_index - removing node at index
- * @head: input head address
- * @index: input index
- * Return: 1 if success, -1 if fail
+ * print_list_str - prints only the str element of a list_t linked list
+ * @h: pointer to first node
+ *
+ * Return: size of list
  */
-int delete_nodeint_at_index(list_t **head, int index)
+size_t print_list_str(const list_t *h)
 {
-	list_t *n_head;
-	list_t *holder;
-	int count = 0;
+	size_t i = 0;
 
-	if (*head == NULL)
-		return (-1);
-	if (index == 0)
+	while (h)
 	{
-		holder = (*head)->next;
-		free((*head)->var);
-		free(*head);
-		*head = holder;
+		_puts(h->str ? h->str : "(nil)");
+		_puts("\n");
+		h = h->next;
+		i++;
+	}
+	return (i);
+}
+
+/**
+ * delete_node_at_index - deletes node at given index
+ * @head: address of pointer to first node
+ * @index: index of node to delete
+ *
+ * Return: 1 on success, 0 on failure
+ */
+int delete_node_at_index(list_t **head, unsigned int index)
+{
+	list_t *node, *prev_node;
+	unsigned int i = 0;
+
+	if (!head || !*head)
+		return (0);
+
+	if (!index)
+	{
+		node = *head;
+		*head = (*head)->next;
+		free(node->str);
+		free(node);
 		return (1);
 	}
-	count = 1;
-	n_head = *head;
-	while (count < index)
+	node = *head;
+	while (node)
 	{
-		if (n_head == NULL)
-			return (-1);
-		n_head = n_head->next;
-		count++;
+		if (i == index)
+		{
+			prev_node->next = node->next;
+			free(node->str);
+			free(node);
+			return (1);
+		}
+		i++;
+		prev_node = node;
+		node = node->next;
 	}
-	holder = n_head->next;
-	n_head->next = holder->next;
-	free(holder->var);
-	free(holder);
-	return (1);
+	return (0);
 }
 
 /**
- * free_linked_list - frees linked list
- * @list: linked list
+ * free_list - frees all nodes of a list
+ * @head_ptr: address of pointer to head node
+ *
+ * Return: void
  */
-void free_linked_list(list_t *list)
+void free_list(list_t **head_ptr)
 {
-	list_t *holder;
+	list_t *node, *next_node, *head;
 
-	while (list != NULL)
+	if (!head_ptr || !*head_ptr)
+		return;
+	head = *head_ptr;
+	node = head;
+	while (node)
 	{
-		holder = list;
-		list = list->next;
-		free(holder->var);
-		free(holder);
+		next_node = node->next;
+		free(node->str);
+		free(node);
+		node = next_node;
 	}
-
+	*head_ptr = NULL;
 }
-
