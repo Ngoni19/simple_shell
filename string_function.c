@@ -1,75 +1,94 @@
 #include "shell.h"
 
 /**
- * _strlen - returns the length of a string
- * @s: the string whose length to check
- *
- * Return: integer length of string
- */
-int _strlen(char *s)
-{
-	int i = 0;
-
-	if (!s)
-		return (0);
-
-	while (*s++)
-		i++;
-	return (i);
-}
-
-/**
- * _strcmp - performs lexicogarphic comparison of two strangs.
- * @s1: the first strang
- * @s2: the second strang
- *
- * Return: negative if s1 < s2, positive if s1 > s2, zero if s1 == s2
- */
-int _strcmp(char *s1, char *s2)
-{
-	while (*s1 && *s2)
-	{
-		if (*s1 != *s2)
-			return (*s1 - *s2);
-		s1++;
-		s2++;
-	}
-	if (*s1 == *s2)
-		return (0);
-	else
-		return (*s1 < *s2 ? -1 : 1);
-}
-
-/**
- * starts_with - checks if needle starts with haystack
- * @haystack: string to search
- * @needle: the substring to find
- *
- * Return: address of next char of haystack or NULL
- */
-char *starts_with(const char *haystack, const char *needle)
-{
-	while (*needle)
-		if (*needle++ != *haystack++)
-			return (NULL);
-	return ((char *)haystack);
-}
-
-/**
- * _strcat - concatenates two strings
- * @dest: the destination buffer
- * @src: the source buffer
- *
- * Return: pointer to destination buffer
+ * _strcat - concatenate two strings
+ * @dest: string to be appended to
+ * @src: string to append
+ * Return: concatenated string
  */
 char *_strcat(char *dest, char *src)
 {
-	char *ret = dest;
+	int len = 0;
+	int len2 = 0;
+	int total_len = 0;
+	int k = 0;
 
-	while (*dest)
-		dest++;
-	while (*src)
-		*dest++ = *src++;
-	*dest = *src;
-	return (ret);
+	/* find total length of both strings to _realloc */
+	while (dest[len] != '\0')
+	{
+		len++;
+		total_len++;
+	}
+	while (src[len2] != '\0')
+	{
+		len2++;
+		total_len++;
+	}
+
+	/* _realloc since dest was malloced outside of function */
+	dest = _realloc(dest, len, sizeof(char) * total_len + 1);
+
+	while (src[k] != '\0')
+	{
+		dest[len] = src[k];
+		len++;
+		k++;
+	}
+	dest[len] = '\0';
+
+	return (dest);
 }
+/**
+ * _strcpy - copies the string pointed to by src,
+ * including the terminating null byte (\0),
+ * to the buffer pointed to by dest
+ * @dest: copy source to this buffer
+ * @src: this is the source to copy
+ * Return: copy of original source
+ */
+
+char *_strcpy(char *dest, char *src)
+{
+	int i, len;
+
+	for (len = 0; src[len] != '\0'; len++)
+		;
+
+	for (i = 0; i <= len; i++)
+		dest[i] = src[i];
+
+	return (dest);
+}
+
+/**
+ * _strdup - returns a pointer to a newly allocated space in memory,
+ * that contains a copy of the str given as a parameter
+ * @str: string to duplicate
+ * Return: pointer to duplicated string in allocated memory
+ */
+char *_strdup(char *str)
+{
+	char *duplicate_str;
+	int i, len = 0;
+
+	if (str == NULL) /* validate str input */
+		return (NULL);
+
+	while (*(str + len))
+		len++;
+	len++; /* add null terminator to length */
+
+	duplicate_str = malloc(sizeof(char) * len); /* allocate memory */
+	if (duplicate_str == NULL)
+		return (NULL);
+
+	i = 0;
+	while (i < len)
+	{
+		*(duplicate_str + i) = *(str + i);
+		i++;
+	}
+
+	return (duplicate_str);
+}
+
