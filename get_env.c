@@ -1,93 +1,61 @@
 #include "shell.h"
 
 /**
- * get_environ - returns the string array copy of our environ
- * @info: Structure containing potential arguments. Used to maintain
- *          constant function prototype.
- * Return: Always 0
+ * c_strdup - custom string duplication; excludes beginning bytes
+ * @str: string to duplicate (e.g. environmental variable PATH=/bin:/bin/ls)
+ * @cs: number of bytes to exclude (e.g. excludes "PATH=")
+ * Return: string (e.g. /bin:/bin/ls)
  */
-char **get_environ(info_t *info)
+char *c_strdup(char *str, int cs)
 {
-	if (!info->environ || info->env_changed)
+	char *duplicate_str;
+	int i, len = 0;
+
+	if (str == NULL) /* validate str input */
+		return (NULL);
+
+	/* calculate len + null terminator to malloc */
+	while (*(str + len))
+		len++;
+	len++;
+
+	/* allocate memory but exclude environmental variable title (PATH) */
+	duplicate_str = malloc(sizeof(char) * (len - cs));
+	if (duplicate_str == NULL)
+		return (NULL);
+
+	i = 0;
+	while (i < (len - cs))
 	{
-		info->environ = list_to_strings(info->env);
-		info->env_changed = 0;
-	}
-
-	return (info->environ);
-}
-
-/**
- * _unsetenv - Remove an environment variable
- * @info: Structure containing potential arguments. Used to maintain
- *        constant function prototype.
- *  Return: 1 on delete, 0 otherwise
- * @var: the string env var property
- */
-int _unsetenv(info_t *info, char *var)
-{
-	list_t *node = info->env;
-	size_t i = 0;
-	char *p;
-
-	if (!node || !var)
-		return (0);
-
-	while (node)
-	{
-		p = starts_with(node->str, var);
-		if (p && *p == '=')
-		{
-			info->env_changed = delete_node_at_index(&(info->env), i);
-			i = 0;
-			node = info->env;
-			continue;
-		}
-		node = node->next;
+		*(duplicate_str + i) = *(str + cs + i);
 		i++;
 	}
-	return (info->env_changed);
+	return (duplicate_str);
 }
 
 /**
- * _setenv - Initialize a new environment variable,
- *             or modify an existing one
- * @info: Structure containing potential arguments. Used to maintain
- *        constant function prototype.
- * @var: the string env var property
- * @value: the string env var value
- *  Return: Always 0
+ * get_env - finds and returns a copy of the requested environmental variable
+ * @str: string to store it in
+ * @env: entire set of environmental variables
+ * Return: copy of requested environmental variable
  */
-int _setenv(info_t *info, char *var, char *value)
+char *get_env(char *str, list_t *env)
 {
-	char *buf = NULL;
-	list_t *node;
-	char *p;
+	int j = 0, cs = 0;
 
-	if (!var || !value)
-		return (0);
-
-	buf = malloc(_strlen(var) + _strlen(value) + 2);
-	if (!buf)
-		return (1);
-	_strcpy(buf, var);
-	_strcat(buf, "=");
-	_strcat(buf, value);
-	node = info->env;
-	while (node)
+	while (env != NULL)
 	{
-		p = starts_with(node->str, var);
-		if (p && *p == '=')
-		{
-			free(node->str);
-			node->str = buf;
-			info->env_changed = 1;
-			return (0);
-		}
-		node = node->next;
+		j = 0;
+		while ((env->var)[j] == str[j]) /* find desired env variable */
+			j++;
+		if (str[j] == '\0' && (env->var)[j] == '=')
+			break;
+		env = env->next;
 	}
-	add_node_end(&(info->env), buf, 0);
-	free(buf);
-	info->env_changed = 1;
-	return (0);
+
+	while (str[cs] != '\0') /* find how many bytes in env variable title */
+		cs++;
+	cs++; /*counts 1 more for = sign*/
+	return (c_strdup(env->var, cs)); /* make a copy of variable w/o title */
 }
+
