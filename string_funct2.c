@@ -1,87 +1,135 @@
 #include "shell.h"
 
 /**
- * _strcpy - copies a string
- * @dest: the destination
- * @src: the source
- *
- * Return: pointer to destination
+ * c_t_size - returns number of delim
+ * @str: user's command typed into shell
+ * @delm: delimeter (e.g. " ");
+ * Return: number of tokens
  */
-char *_strcpy(char *dest, char *src)
+int c_t_size(char *str, char delm)
 {
-	int i = 0;
+	int i = 0, num_delm = 0;
 
-	if (dest == src || src == 0)
-		return (dest);
-	while (src[i])
-	{
-		dest[i] = src[i];
-		i++;
-	}
-	dest[i] = 0;
-	return (dest);
-}
-
-/**
- * _strdup - duplicates a string
- * @str: the string to duplicate
- *
- * Return: pointer to the duplicated string
- */
-char *_strdup(const char *str)
-{
-	int length = 0;
-	char *ret;
-
-	if (str == NULL)
-		return (NULL);
-	while (*str++)
-		length++;
-	ret = malloc(sizeof(char) * (length + 1));
-	if (!ret)
-		return (NULL);
-	for (length++; length--;)
-		ret[length] = *--str;
-	return (ret);
-}
-
-/**
- *_puts - prints an input string
- *@str: the string to be printed
- *
- * Return: Nothing
- */
-void _puts(char *str)
-{
-	int i = 0;
-
-	if (!str)
-		return;
 	while (str[i] != '\0')
 	{
-		_putchar(str[i]);
+		if (str[i] == delm)
+		{
+			num_delm++;
+		}
 		i++;
 	}
+	return (num_delm);
 }
+
 
 /**
- * _putchar - writes the character c to stdout
- * @c: The character to print
- *
- * Return: On success 1.
- * On error, -1 is returned, and errno is set appropriately.
+ * c_str_tok - tokenizes a string even the continuous delim with empty string
+ * (e.g. path --> ":/bin::/bin/usr" )
+ * @str: user's command typed into shell
+ * @delm: delimeter (e.g. " ");
+ * Return: an array of tokens (e.g. {"\0", "/bin", "\0", "/bin/usr"}
+ * (purpose is to have which command look through current directory if ":")
  */
-int _putchar(char c)
+char **c_str_tok(char *str, char *delm)
 {
-	static int i;
-	static char buf[WRITE_BUF_SIZE];
+	int buffsize = 0, p = 0, si = 0, i = 0, len = 0, se = 0;
+	char **toks = NULL, d_ch;
 
-	if (c == BUF_FLUSH || i >= WRITE_BUF_SIZE)
+	/* set variable to be delimeter character (" ") */
+	d_ch = delm[0];
+	/* malloc number of ptrs to store array of tokens, and NULL ptr */
+	buffsize = c_t_size(str, d_ch);
+	toks = malloc(sizeof(char *) * (buffsize + 2));
+	if (toks == NULL)
+		return (NULL);
+
+	/* iterate from string index 0 to string ending index */
+	while (str[se] != '\0')
+		se++;
+	while (si < se)
 	{
-		write(1, buf, i);
+		/* malloc lengths for each token ptr in array */
+		len = t_strlen(str, si, d_ch);
+		toks[p] = malloc(sizeof(char) * (len + 1));
+		if (toks[p] == NULL)
+			return (NULL);
 		i = 0;
+		while ((str[si] != d_ch) &&
+		       (str[si] != '\0'))
+		{
+			toks[p][i] = str[si];
+			i++;
+			si++;
+		}
+		toks[p][i] = '\0'; /* null terminate at end*/
+		p++;
+		si++;
 	}
-	if (c != BUF_FLUSH)
-		buf[i++] = c;
-	return (1);
+	toks[p] = NULL; /* set last array ptr to NULL */
+	return (toks);
 }
+/**
+ * numlen - counts number of 0s in a tens power number
+ * @n: number
+ * Return: returns count of digits
+ */
+int numlen(int n)
+{
+	int count = 0;
+	int num = n;
+
+	while (num > 9 || num < -9)
+	{
+		num /= 10;
+		count++;
+	}
+	return (count);
+}
+/**
+ * int_to_string - turns an int into a string
+ * @number: int
+ * Return: returns the int as a string. returns NULL if failed
+ */
+
+char *int_to_string(int number)
+{
+	int digits, tens, i = 0, t = 0, x;
+	char *res;
+
+	digits = number;
+	tens = 1;
+
+	if (number < 0)
+		t = 1;
+	res = malloc(sizeof(char) * (numlen(digits) + 2 + t));
+	if (res == NULL)
+		return (NULL);
+	if (number < 0)
+	{
+		res[i] = '-';
+		i++;
+	}
+	for (x = 0; digits > 9 || digits < -9; x++)
+	{
+		digits /= 10;
+		tens *= 10;
+	}
+	for (digits = number; x >= 0; x--)
+	{
+		if (digits < 0)
+		{
+			res[i] = (digits / tens) * -1 + '0';
+			i++;
+		}
+		else
+		{
+			res[i] = (digits / tens) + '0';
+			i++;
+		}
+		digits %= tens;
+		tens /= 10;
+	}
+	res[i] = '\0';
+	return (res);
+}
+
